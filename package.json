@@ -12,11 +12,7 @@
         "build": "tsc",
         "start": "node dist/src/server.js",
         "start:dev": "ts-node ./src/server.ts",
-        "dev": "nodemon",
-        "script:rename-prescriptions": "node dist/src/migration-script/rename-prescriptions-collection.js",
-        "script:migrate-update-prescriptions": "node dist/src/migration-script/index.js",
-        "script:dev": "concurrently \"ts-node ./src/migration-script/rename-prescriptions-collection.ts\" \"ts-node ./src/migration-script/index.ts\"",
-        "script:dev-migration": "ts-node ./src/migration-script/index.ts"
+        "dev": "nodemon"
     },
     "dependencies": {
         "accesscontrol": "^2.2.1",
@@ -25,6 +21,7 @@
         "compression": "^1.7.4",
         "concurrently": "^5.2.0",
         "cors": "^2.8.5",
+        "dotenv": "^8.2.0",
         "express": "^4.17.1",
         "helmet": "^3.21.2",
         "jsonwebtoken": "^8.5.1",
@@ -50,12 +47,12 @@
         "@types/lodash": "^4.14.150",
         "@types/mongoose": "^5.7.0",
         "@types/morgan": "^1.7.37",
+        "@types/needle": "^2.0.4",
         "@types/node": "^13.7.0",
         "@types/passport": "^1.0.2",
         "@types/passport-jwt": "^3.0.3",
         "@types/passport-local": "^1.0.33",
         "@types/uuid": "^7.0.2",
-        "@types/needle": "^2.0.4",
         "nodemon": "^2.0.2",
         "ts-node": "^8.6.2",
         "typescript": "^3.7.5"
