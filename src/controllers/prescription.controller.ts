@@ -116,26 +116,59 @@ class PrescriptionController implements BaseController{
 
   public dispense = async (req: Request, res: Response) => {
     try{
-      const {prescriptionId, userId } = req.params;
+      const { id } = req.params;
+      const { pharmacistId } = req.body;
 
-      const dispensedBy: IUser | null = await User.findOne({_id: userId});
+      const dispensedBy: IUser | null = await User.findOne({_id: pharmacistId});
       if(!dispensedBy) return res.status(4000).json("Farmacia no encontrada");
 
       const opts: any = {new: true};
-      const prescription: IPrescription | null = await Prescription.findOneAndUpdate({_id: prescriptionId, status: 'Pendiente'}, {
+      const dispensedAt = moment();
+
+      const prescription: IPrescription | null = await Prescription.findOneAndUpdate({_id: id, status: 'Pendiente'}, {
         status: 'Dispensada',
         dispensedBy: {
           userId: dispensedBy?._id,
           businessName: dispensedBy?.businessName,
           cuil: dispensedBy?.cuil,
         },
-        dispensedAt: new Date()
+        dispensedAt: dispensedAt
       }, opts);
 
       if(!prescription) return res.status(422).json('La receta ya había sido dispensada.');
 
       return res.status(200).json(prescription);
     } catch(err){
+      console.log(err);
+      return res.status(500).json('Server Error');
+    }
+  }
+
+  public cancelDispense = async (req: Request, res: Response) => {
+    try{
+      const { id } = req.params;
+      const { pharmacistId } = req.body;
+
+      const dispensedBy: IUser | null = await User.findOne({_id: pharmacistId});
+      if(!dispensedBy) return res.status(4000).json("Farmacia no encontrada");
+
+      const controlPrescription: IPrescription | null = await Prescription.findOne({_id: id, status: 'Dispensada'});
+      if(!controlPrescription) return res.status(404).json('La receta no se encontró.');
+
+      const limitTime = moment(controlPrescription.dispensedAt).add(2, 'hours'); // plus 2 hours to dispensedBy
+      const timeNow = moment();
+
+      if(timeNow.isAfter(limitTime)) return res.status(422).json('Ya no se puede anular la dispensa de la receta.');
+
+      const opts: any = {new: true};
+      const prescription: IPrescription | null = await Prescription.findOneAndUpdate({_id: id, status: 'Dispensada'}, {
+        status: 'Pendiente',
+        dispensedBy: {},
+        dispensedAt: ''
+      }, opts);
+
+      return res.status(200).json(prescription);
+    } catch(err) {
       console.log(err);
       return res.status(500).json('Server Error');
     }
@@ -148,7 +181,7 @@ class PrescriptionController implements BaseController{
     try{
 
       const prescription: IPrescription | null = await Prescription.findOne({_id: id, status: "Pendiente"});
-      
+
       if(!prescription) return res.status(400).json("No se encontró la prescripción, se encuentra dispensada o vencida");
 
 
