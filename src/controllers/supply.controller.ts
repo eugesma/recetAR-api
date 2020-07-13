@@ -12,13 +12,27 @@ class SupplyController implements BaseController{
   }
 
   public create = async (req: Request, res: Response): Promise<Response> => {
-    const { id, name, unity, sex, image } = req.body;
-    const newSupply: ISupply = new Supply({
-      id,
+    const { 
       name,
+      activePrinciple,
+      power,
       unity,
-      sex,
-      image
+      firstPresentation,
+      secondPresentation,
+      description,
+      observation,
+      pharmaceutical_form
+     } = req.body;
+    const newSupply: ISupply = new Supply({
+      name,
+      activePrinciple,
+      power,
+      unity,
+      firstPresentation,
+      secondPresentation,
+      description,
+      observation,
+      pharmaceutical_form
     });
     try{
       await newSupply.save();

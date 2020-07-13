@@ -53,6 +53,7 @@ class AccessControlLoader {
       // supplies
       { role: 'professional', resource: 'supplies', action: 'read:any', attributes: '*' },
       { role: 'pharmacist', resource: 'supplies', action: 'read:any', attributes: '*' },
+      { role: 'admin', resource: 'supplies', action: 'create:any', attributes: '*' },
       { role: 'admin', resource: 'supplies', action: 'update:any', attributes: '*' }
     ];
     this.accessControl.setGrants(grantList);
