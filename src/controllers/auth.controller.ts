@@ -8,11 +8,13 @@ import IUser from '../interfaces/user.interface';
 import User from '../models/user.model';
 import IRole from '../interfaces/role.interface';
 import Role from '../models/role.model';
+import { renderHTML, MailOptions, sendMail } from '../utils/roboSender/sendEmail';
+import { enviarMail, APP_DOMAIN } from '../../config.private';
 
-class AuthController{
+class AuthController {
 
   public register = async (req: Request, res: Response): Promise<Response> => {
-    try{
+    try {
       const { username, email, enrollment, cuil, businessName, password, roleType } = req.body;
       const newUser = new User({ username, email, password, enrollment, cuil, businessName });
       const role: IRole = await Role.schema.methods.findByRoleOrCreate(roleType);
@@ -21,13 +23,13 @@ class AuthController{
       await newUser.save();
       await role.save();
       return res.status(200).json({
-          newUser
+        newUser
       });
 
-    }catch(e){
+    } catch (e) {
       let errors: { [key: string]: string } = {};
       Object.keys(e.errors).forEach(prop => {
-          errors[ prop ] = e.errors[prop].message;
+        errors[prop] = e.errors[prop].message;
       });
       return res.status(422).json(errors);
     }
@@ -36,15 +38,29 @@ class AuthController{
   public resetPassword = async (req: Request, res: Response): Promise<Response> => {
     const { _id } = req.user as IUser;
     const { oldPassword, newPassword } = req.body;
-    try{
+    try {
       const user: IUser | null = await User.findOne({ _id });
-      if(!user) return res.status(404).json('No se ha encontrado el usuario');
+      if (!user) return res.status(404).json('No se ha encontrado el usuario');
       const isMatch: boolean = await User.schema.methods.isValidPassword(user, oldPassword);
-      if(!isMatch) return res.status(401).json({ message: 'Su contraseña actual no coincide con nuestros registros'});
+      if (!isMatch) return res.status(401).json({ message: 'Su contraseña actual no coincide con nuestros registros' });
 
-      await user.update({password: newPassword});
+      await user.update({ password: newPassword });
       return res.status(200).json('Se ha modificado la contraseña correctamente!');
-    }catch(err){
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json('Server Error');
+    }
+  }
+
+  public recoverPassword = async (req: Request, res: Response): Promise<Response> => {
+    const { authenticationToken, newPassword } = req.body;
+    try {
+      const user: IUser | null = await User.findOne({ authenticationToken: authenticationToken });
+      if (!user) return res.status(404).json('No se ha encontrado el usuario');
+
+      await user.update({ password: newPassword });
+      return res.status(200).json('Se ha modificado la contraseña correctamente!');
+    } catch (err) {
       console.log(err);
       return res.status(500).json('Server Error');
     }
@@ -52,19 +68,19 @@ class AuthController{
 
   public login = async (req: Request, res: Response): Promise<Response> => {
     const { _id } = req.user as IUser;
-    try{
+    try {
 
-      const user: IUser | null = await User.findOne({_id}).populate({path: 'roles', select: 'role'});
+      const user: IUser | null = await User.findOne({ _id }).populate({ path: 'roles', select: 'role' });
 
-      if(user){
+      if (user) {
         const roles: string | string[] = [];
-        await Promise.all(user.roles.map( async (role) => {
+        await Promise.all(user.roles.map(async (role) => {
           roles.push(role.role);
         }));
         const token = this.signInToken(user._id, user.username, user.businessName, roles);
 
         const refreshToken = uuidv4();
-        await User.updateOne({_id: user._id}, {refreshToken: refreshToken});
+        await User.updateOne({ _id: user._id }, { refreshToken: refreshToken });
         return res.status(200).json({
           jwt: token,
           refreshToken: refreshToken
@@ -72,7 +88,7 @@ class AuthController{
       }
 
       return res.status(httpCodes.EXPECTATION_FAILED).json('Debe iniciar sesión');//in the case that not found user
-    }catch(err){
+    } catch (err) {
       console.log(err);
       return res.status(500).json('Server Error');
     }
@@ -80,10 +96,10 @@ class AuthController{
 
   public logout = async (req: Request, res: Response): Promise<Response> => {
     const { refreshToken } = req.body;
-    try{
+    try {
       await User.findOneAndUpdate({ refreshToken: refreshToken }, { refreshToken: '' });
       return res.status(204).json('Logged out successfully!');
-    }catch(err){
+    } catch (err) {
       console.log(err);
       return res.status(500).json("Server error");
     }
@@ -91,21 +107,21 @@ class AuthController{
 
   public refresh = async (req: Request, res: Response): Promise<Response> => {
     const refreshToken = req.body.refreshToken;
-    try{
-      const user: IUser | null = await User.findOne({refreshToken: refreshToken }).populate({path: 'roles', select: 'role'});
+    try {
+      const user: IUser | null = await User.findOne({ refreshToken: refreshToken }).populate({ path: 'roles', select: 'role' });
 
-      if(user){
+      if (user) {
         // in next version, should embed roles information
         const roles: string | string[] = [];
-        await Promise.all(user.roles.map( async (role) => {
-            roles.push(role.role);
+        await Promise.all(user.roles.map(async (role) => {
+          roles.push(role.role);
         }));
 
         const token = this.signInToken(user._id, user.username, user.businessName, roles);
 
         // generate a new refresh_token
         const refreshToken = uuidv4();
-        await User.updateOne({_id: user._id}, {refreshToken: refreshToken});
+        await User.updateOne({ _id: user._id }, { refreshToken: refreshToken });
         return res.status(200).json({
           jwt: token,
           refreshToken: refreshToken
@@ -114,7 +130,7 @@ class AuthController{
 
       return res.status(httpCodes.EXPECTATION_FAILED).json('Debe iniciar sesión');//in the case that not found user
 
-    }catch(err){
+    } catch (err) {
       console.log(err);
       return res.status(500).json('Server error');
     }
@@ -126,23 +142,23 @@ class AuthController{
     // son los campos que permitiremos actualizar.
     const { id } = req.params;
     const values: any = {};
-    try{
+    try {
 
       _(req.body).forEach((value: string, key: string) => {
-        if (!_.isEmpty(value) && _.includes(["email", "password", "username", "enrollment", "cuil", "businessName"], key)){
+        if (!_.isEmpty(value) && _.includes(["email", "password", "username", "enrollment", "cuil", "businessName"], key)) {
           values[key] = value;
         }
       });
       const opts: any = { runValidators: true, new: true, context: 'query' };
-      const user: IUser | null = await User.findOneAndUpdate({_id: id}, values, opts).select("username email cuil enrollment businessName");
+      const user: IUser | null = await User.findOneAndUpdate({ _id: id }, values, opts).select("username email cuil enrollment businessName");
 
       return res.status(200).json(user);
-    }catch(e){
+    } catch (e) {
       // formateamos los errores de validacion
-      if(e.name !== 'undefined' && e.name === 'ValidationError'){
+      if (e.name !== 'undefined' && e.name === 'ValidationError') {
         let errors: { [key: string]: string } = {};
         Object.keys(e.errors).forEach(prop => {
-          errors[ prop ] = e.errors[prop].message;
+          errors[prop] = e.errors[prop].message;
         });
         return res.status(422).json(errors);
       }
@@ -154,15 +170,15 @@ class AuthController{
   public getUser = async (req: Request, res: Response): Promise<Response> => {
     // obtenemos los datos del usuario, buscando por: "email" / "username" / "cuil"
     const { email, username, cuil } = req.body;
-    try{
+    try {
       const users: IUser[] | null = await User.find({
-        $or: [{"email": email}, {"username": username}, {"cuil": cuil}]
+        $or: [{ "email": email }, { "username": username }, { "cuil": cuil }]
       }).select("username email cuil enrollment, businessName");
 
-      if(!users) return res.status(400).json('Usuario no encontrado');
+      if (!users) return res.status(400).json('Usuario no encontrado');
 
       return res.status(200).json(users);
-    }catch(err){
+    } catch (err) {
       console.log(err);
       return res.status(500).json("Server Error");
     }
@@ -171,16 +187,16 @@ class AuthController{
   public assignRole = async (req: Request, res: Response): Promise<Response> => {
     const { id } = req.params;
     const { roleId } = req.body;
-    try{
-      const role: IRole | null = await Role.findOne({ _id : roleId });
-      if(role){
-        await User.findByIdAndUpdate({ _id: id },{
+    try {
+      const role: IRole | null = await Role.findOne({ _id: roleId });
+      if (role) {
+        await User.findByIdAndUpdate({ _id: id }, {
           roles: role
         });
       }
-      const user: IUser | null = await User.findOne({ _id : id });
+      const user: IUser | null = await User.findOne({ _id: id });
       return res.status(200).json(user);
-    }catch(err){
+    } catch (err) {
       console.log(err);
       return res.status(500).json('Server Error');
     }
@@ -199,6 +215,45 @@ class AuthController{
       algorithm: 'HS256'
     });
     return token;
+  }
+
+  /**
+ * Envía un link para recuperar la contraseña en caso qeu sea un usuario temporal con email (fuera de onelogin).
+ * AuthUser
+ */
+  public setValidationTokenAndNotify = async (username: string) => {
+    try {
+      let usuario: any = await User.findOne({ username });
+      if (usuario) {
+        usuario.authenticationToken = uuidv4();
+        console.log(usuario)
+        await usuario.save();
+
+        const extras: any = {
+          titulo: 'Recuperación de contraseña',
+          usuario,
+          url: `${APP_DOMAIN}/auth/recovery-password/${usuario.authenticationToken}`,
+        };
+        console.log('extras', extras)
+        const htmlToSend = await renderHTML('emails/recover-password.html', extras);
+
+        const options: MailOptions = {
+          from: enviarMail.auth.user,
+          to: usuario.email.toString(),
+          subject: 'Recuperación de contraseña',
+          text: '',
+          html: htmlToSend,
+          attachments: null
+        };
+
+        await sendMail(options);
+        return usuario;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 
 }

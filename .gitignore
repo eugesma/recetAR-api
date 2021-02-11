@@ -1,3 +1,6 @@
+# Archivos de configuración
+config.private.ts
+
 # Logs
 logs
 *.log
