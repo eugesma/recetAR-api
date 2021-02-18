@@ -226,7 +226,6 @@ class AuthController {
       let usuario: any = await User.findOne({ username });
       if (usuario) {
         usuario.authenticationToken = uuidv4();
-        console.log(usuario)
         await usuario.save();
 
         const extras: any = {
@@ -234,9 +233,7 @@ class AuthController {
           usuario,
           url: `${APP_DOMAIN}/auth/recovery-password/${usuario.authenticationToken}`,
         };
-        console.log('extras', extras)
         const htmlToSend = await renderHTML('emails/recover-password.html', extras);
-
         const options: MailOptions = {
           from: enviarMail.auth.user,
           to: usuario.email.toString(),
