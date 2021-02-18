@@ -1,4 +1,3 @@
-import { enviarMail } from '../../../config.private';
 import * as fs from 'fs';
 import moment = require('moment');
 import Handlebars from 'handlebars';
@@ -22,10 +21,13 @@ export interface MailOptions {
 export function sendMail(options: MailOptions) {
     return new Promise((resolve, reject) => {
         const transporter = nodemailer.createTransport({
-            host: enviarMail.host,
-            port: enviarMail.port,
-            secure: enviarMail.secure,
-            auth: enviarMail.auth,
+            host: `${process.env.EMAIL_HOST}`,
+            port: parseInt(`${process.env.EMAIL_PORT}`, 10),
+            secure: (`${process.env.EMAIL_SECURE}` === 'true'),
+            auth: {
+                user: `${process.env.EMAIL_USERNAME}`,
+                pass: `${process.env.EMAIL_PASSWORD}`
+            },
         });
 
         const mailOptions = {
