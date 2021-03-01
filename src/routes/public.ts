@@ -1,4 +1,5 @@
 import { Router } from 'express';
+
 class PublicRoutes{
 
   constructor(private router: Router = Router()){}
