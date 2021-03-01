@@ -97,7 +97,7 @@ class PrivateRoutes{
     // this.router.put(`/supplies/:id`, hasPermissionIn('updateAny','patient'), supplyController.update);
     // this.router.delete(`/supplies/:id`, hasPermissionIn('deleteAny','patient'), supplyController.delete);
 
-    this.router.post('/andes-prescriptions', hasPermissionIn('createAny','user'), andesController.create);
+    this.router.post('/andes-prescriptions', hasPermissionIn('createAny','andesPrescription'), andesController.create);
     return this.router;
   }
 }
