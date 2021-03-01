@@ -13,6 +13,7 @@ import patientController from '../controllers/patient.controller';
 // import pharmacyController from '../controllers/pharmacy.controller';
 import supplyController from '../controllers/supply.controller';
 import authController from '../controllers/auth.controller';
+import andesController from '../controllers/andesPrescription.controller';
 class PrivateRoutes{
 
   constructor(private router: Router = Router()){}
@@ -32,6 +33,7 @@ class PrivateRoutes{
     // this.router.post('/roles/:id/assign-user', roleController.assignUser);
 
     this.router.get('/auth/user/find', hasPermissionIn('readAny','user'), authController.getUser);
+    
     this.router.post('/auth/register', hasPermissionIn('updateAny','user'), authController.register);
     this.router.post('/auth/reset-password', authController.resetPassword);
     this.router.patch('/auth/user/:id', hasPermissionIn('updateAny','user'), authController.updateUser);
@@ -95,6 +97,7 @@ class PrivateRoutes{
     // this.router.put(`/supplies/:id`, hasPermissionIn('updateAny','patient'), supplyController.update);
     // this.router.delete(`/supplies/:id`, hasPermissionIn('deleteAny','patient'), supplyController.delete);
 
+    this.router.post('/andes-prescriptions', hasPermissionIn('createAny','user'), andesController.create);
     return this.router;
   }
 }
