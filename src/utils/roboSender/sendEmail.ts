@@ -1,11 +1,11 @@
-import { enviarMail } from '../../../config.private';
 import * as fs from 'fs';
 import moment = require('moment');
-const handlebars = require('handlebars');
+import Handlebars from 'handlebars';
+// const handlebars = require('handlebars');
 const path = require('path');
 const nodemailer = require('nodemailer');
 
-handlebars.registerHelper('datetime', (dateTime: any) => {
+Handlebars.registerHelper('datetime', (dateTime: any) => {
     return moment(dateTime).format('D MMM YYYY [a las] H:mm [hs]');
 });
 
@@ -21,10 +21,13 @@ export interface MailOptions {
 export function sendMail(options: MailOptions) {
     return new Promise((resolve, reject) => {
         const transporter = nodemailer.createTransport({
-            host: enviarMail.host,
-            port: enviarMail.port,
-            secure: enviarMail.secure,
-            auth: enviarMail.auth,
+            host: `${process.env.EMAIL_HOST}`,
+            port: parseInt(`${process.env.EMAIL_PORT}`, 10),
+            secure: (`${process.env.EMAIL_SECURE}` === 'true'),
+            auth: {
+                user: `${process.env.EMAIL_USERNAME}`,
+                pass: `${process.env.EMAIL_PASSWORD}`
+            },
         });
 
         const mailOptions = {
@@ -55,8 +58,8 @@ export function renderHTML(templateName: string, extras: any): Promise<string> {
                 return reject(err);
             }
             try {
-                const template = handlebars.compile(html);
-                const htmlToSend = template(extras);
+                const template = Handlebars.compile(html);
+                const htmlToSend = template({nombre: extras.usuario.businessName, url: extras.url});
                 return resolve(htmlToSend);
             } catch (exp) {
                 return reject(exp);
@@ -69,5 +72,5 @@ export function renderHTML(templateName: string, extras: any): Promise<string> {
 export function registerPartialTemplate(key: string, fileName: string) {
     const filePath = path.join(process.cwd(), `templates/${fileName}`);
     const file = fs.readFileSync(filePath);
-    handlebars.registerPartial(key, file.toString());
+    Handlebars.registerPartial(key, file.toString());
 }

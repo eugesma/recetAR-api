@@ -9,7 +9,6 @@ import User from '../models/user.model';
 import IRole from '../interfaces/role.interface';
 import Role from '../models/role.model';
 import { renderHTML, MailOptions, sendMail } from '../utils/roboSender/sendEmail';
-import { enviarMail, APP_DOMAIN } from '../../config.private';
 
 class AuthController {
 
@@ -226,19 +225,16 @@ class AuthController {
       let usuario: any = await User.findOne({ username });
       if (usuario) {
         usuario.authenticationToken = uuidv4();
-        console.log(usuario)
         await usuario.save();
 
         const extras: any = {
           titulo: 'Recuperación de contraseña',
           usuario,
-          url: `${APP_DOMAIN}/auth/recovery-password/${usuario.authenticationToken}`,
+          url: `${process.env.APP_DOMAIN}/auth/recovery-password/${usuario.authenticationToken}`,
         };
-        console.log('extras', extras)
         const htmlToSend = await renderHTML('emails/recover-password.html', extras);
-
         const options: MailOptions = {
-          from: enviarMail.auth.user,
+          from: `${process.env.EMAIL_USERNAME}`,
           to: usuario.email.toString(),
           subject: 'Recuperación de contraseña',
           text: '',

@@ -71,7 +71,7 @@ export const userSchema = new Schema({
 });
 
 // Model
-const User: Model<IUser> = model<IUser>('User', userSchema, 'User');
+const User: Model<IUser> = model<IUser>('User', userSchema);
 
 // Model methods
 User.schema.method('isValidPassword', async function(thisUser: IUser, password: string): Promise<boolean>{
