@@ -201,6 +201,38 @@ class AuthController {
     }
   }
 
+  /* modificar toke */
+  public getToken = async (req: Request, res: Response): Promise<Response> => {
+    const { username } = req.body;
+
+    try {
+      const user: IUser | null = await User.findOne({ username: username }).populate({ path: 'roles', select: 'role' });
+      if (!user) {
+        return res.status(422).json({message: "Usuario no encontrado."});
+      }
+      // in next version, should embed roles information
+      const roles: string | string[] = [];
+      await Promise.all(user.roles.map(async (role) => {
+        roles.push(role.role);
+      }));
+    
+      const token = JWT.sign({
+        iss: "recetar.andes",
+        sub: user._id,
+        usrn: user.username,
+        bsname: user.businessName,
+        rl: roles,
+        iat: new Date().getTime()
+      }, (process.env.JWT_SECRET || env.JWT_SECRET), {
+        algorithm: 'HS256'
+      });
+      return res.status(200).json({jwt: token});
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json('Server Error');
+    }
+  }
+
   private signInToken = (userId: string, username: string, businessName: string, role: string | string[]): any => {
     const token = JWT.sign({
       iss: "recetar.andes",
