@@ -39,6 +39,8 @@ class PrivateRoutes{
     this.router.get('/patients/get-by-dni/:dni', patientController.getByDni);
     this.router.get('/prescriptions/find/:patient_id&:date?', prescriptionController.getPrescriptionsByDateOrPatientId);
     this.router.get('/prescriptions/get-by-user-id/:userId', prescriptionController.getByUserId);
+    this.router.get('/prescriptions', prescriptionController.get);
+    this.router.get('/supplies', supplyController.get);
     this.router.get('/supplies/get-by-name', supplyController.getByName);
 
     // roles
@@ -88,7 +90,7 @@ class PrivateRoutes{
     // this.router.delete(`/professionals/:id`, hasPermissionIn('deleteAny','patient'), professionalController.delete);
 
     // supply
-    this.router.get(`/supplies/`, hasPermissionIn('readAny','patient'), supplyController.index);
+    this.router.get(`/supplies/`, hasPermissionIn('readAny','supplies'), supplyController.index);
     this.router.post(`/supplies/`, hasPermissionIn('createAny','supplies'), supplyController.create);
     this.router.patch('/supplies/:id', hasPermissionIn('updateAny','supplies'), supplyController.update);
     // this.router.get(`/supplies/:id`, hasPermissionIn('readAny','patient'), supplyController.show);
