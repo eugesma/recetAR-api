@@ -100,6 +100,16 @@ class PrescriptionController implements BaseController{
     }
   }
 
+  public get = async (req: Request, res: Response): Promise<Response> => {
+    try{
+      const prescriptions: IPrescription[] | null = await Prescription.find({}).sort({ field: 'desc', date: -1});
+      return res.status(200).json(prescriptions);
+    }catch(err){
+      console.log(err);
+      return res.status(500).json('Server Error');
+    }
+  }
+
   public getByUserId = async (req: Request, res: Response): Promise<Response> => {
     try{
       const { userId } = req.params;
