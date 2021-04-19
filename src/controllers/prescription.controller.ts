@@ -7,8 +7,10 @@ import Supply from '../models/supply.model';
 import IPatient from '../interfaces/patient.interface';
 import Patient from '../models/patient.model';
 import User from '../models/user.model';
+import Role from '../models/role.model';
 import IUser from '../interfaces/user.interface';
 import moment = require('moment');
+import IRole from '../interfaces/role.interface';
 
 class PrescriptionController implements BaseController{
 
@@ -160,15 +162,19 @@ class PrescriptionController implements BaseController{
       const { pharmacistId } = req.body;
 
       const dispensedBy: IUser | null = await User.findOne({_id: pharmacistId});
+
       if(!dispensedBy) return res.status(4000).json("Farmacia no encontrada");
+
+      const userRole: IRole | null = await Role.findOne({role: "admin", _id: { $in: dispensedBy.roles } }) // checkeamos el rol del usuario no sea admin
 
       const controlPrescription: IPrescription | null = await Prescription.findOne({_id: id, status: 'Dispensada'});
       if(!controlPrescription) return res.status(404).json('La receta no se encontró.');
 
       const limitTime = moment(controlPrescription.dispensedAt).add(2, 'hours'); // plus 2 hours to dispensedBy
       const timeNow = moment();
-
-      if(timeNow.isAfter(limitTime)) return res.status(422).json('Ya no se puede anular la dispensa de la receta.');
+      
+      /* Si ya pasó el tiempo valido para cancelar y no tiene rol admin, entonces cancelamos la accion */
+      if(timeNow.isAfter(limitTime) && userRole?.role !== 'admin') return res.status(422).json('Ya no se puede anular la dispensa de la receta.');
 
       const opts: any = {new: true};
       const prescription: IPrescription | null = await Prescription.findOneAndUpdate({_id: id, status: 'Dispensada'}, {
