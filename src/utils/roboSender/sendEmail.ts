@@ -52,7 +52,8 @@ export function renderHTML(templateName: string, extras: any): Promise<string> {
     return new Promise((resolve, reject) => {
         // [TODO] Analizar el path relativo o absoluto
         const TEMPLATE_PATH = './templates/';
-        const url = path.join(TEMPLATE_PATH, templateName);
+        const url = path.join(process.cwd(), TEMPLATE_PATH, templateName);
+
         fs.readFile(url, { encoding: 'utf-8' }, (err, html) => {
             if (err) {
                 return reject(err);
@@ -67,10 +68,4 @@ export function renderHTML(templateName: string, extras: any): Promise<string> {
 
         });
     });
-}
-
-export function registerPartialTemplate(key: string, fileName: string) {
-    const filePath = path.join(process.cwd(), `templates/${fileName}`);
-    const file = fs.readFileSync(filePath);
-    Handlebars.registerPartial(key, file.toString());
 }
