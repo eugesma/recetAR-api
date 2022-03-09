@@ -20,13 +20,14 @@ class AuthRoutes {
         if (username) {
           const user = await authController.setValidationTokenAndNotify(username);
           if(user) {
-            res.json( { status: 'ok', msg: 'Se ha enviado un correo a su casilla!'});
+            return res.json( { status: 'ok', msg: 'Se ha enviado un correo a su casilla!'});
           } else {
-            res.json( { status: 'notfound', msg: 'Usuario no encontrado! Por favor revise sus datos'});
+            return res.json( { status: 'notfound', msg: 'Usuario no encontrado! Por favor revise sus datos'});
           }
-          return next(403);
         }
-        } catch (error) {
+        return next(403);
+
+      } catch (error) {
         return next(error);
       }
     });
