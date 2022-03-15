@@ -31,12 +31,9 @@ export const supplySchema = new Schema({
   },
   observation: {
     type: String,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: Date,
+  }
+},{
+  timestamps: true
 });
 
 // Model

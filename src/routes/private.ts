@@ -13,6 +13,7 @@ import patientController from '../controllers/patient.controller';
 // import pharmacyController from '../controllers/pharmacy.controller';
 import supplyController from '../controllers/supply.controller';
 import authController from '../controllers/auth.controller';
+
 class PrivateRoutes{
 
   constructor(private router: Router = Router()){}
@@ -31,7 +32,9 @@ class PrivateRoutes{
 
     // this.router.post('/roles/:id/assign-user', roleController.assignUser);
 
+    this.router.get('/user/get-token', hasPermissionIn('readAny','user'), authController.getToken);
     this.router.get('/auth/user/find', hasPermissionIn('readAny','user'), authController.getUser);
+    
     this.router.post('/auth/register', hasPermissionIn('updateAny','user'), authController.register);
     this.router.post('/auth/reset-password', authController.resetPassword);
     this.router.patch('/auth/user/:id', hasPermissionIn('updateAny','user'), authController.updateUser);
@@ -39,6 +42,8 @@ class PrivateRoutes{
     this.router.get('/patients/get-by-dni/:dni', patientController.getByDni);
     this.router.get('/prescriptions/find/:patient_id&:date?', prescriptionController.getPrescriptionsByDateOrPatientId);
     this.router.get('/prescriptions/get-by-user-id/:userId', prescriptionController.getByUserId);
+    this.router.get('/prescriptions', prescriptionController.get);
+    this.router.get('/supplies', supplyController.get);
     this.router.get('/supplies/get-by-name', supplyController.getByName);
 
     // roles
@@ -88,9 +93,9 @@ class PrivateRoutes{
     // this.router.delete(`/professionals/:id`, hasPermissionIn('deleteAny','patient'), professionalController.delete);
 
     // supply
-    this.router.get(`/supplies/`, hasPermissionIn('readAny','patient'), supplyController.index);
+    this.router.get(`/supplies/`, hasPermissionIn('readAny','supplies'), supplyController.index);
+    this.router.post(`/supplies/`, hasPermissionIn('createAny','supplies'), supplyController.create);
     this.router.patch('/supplies/:id', hasPermissionIn('updateAny','supplies'), supplyController.update);
-    // this.router.post(`/supplies/`, hasPermissionIn('createAny','patient'), supplyController.create);
     // this.router.get(`/supplies/:id`, hasPermissionIn('readAny','patient'), supplyController.show);
     // this.router.put(`/supplies/:id`, hasPermissionIn('updateAny','patient'), supplyController.update);
     // this.router.delete(`/supplies/:id`, hasPermissionIn('deleteAny','patient'), supplyController.delete);

@@ -2,10 +2,12 @@
 import { Router } from 'express';
 import { checkAuth } from '../middlewares/passport-config.middleware';
 
+
 // routes
 import authRoutes from './auth';
 import pbulicRoutes from './public';
 import privateRoutes from './private';
+import andesRoutes from './andes';
 
 class Routes {
 
@@ -16,7 +18,8 @@ class Routes {
     // auth
     this.router.use('/auth', authRoutes);
     this.router.use('', pbulicRoutes);
-
+    // andes specific routes
+    this.router.use('/andes', andesRoutes);
     // private: requires authentication
     this.router.all('*', checkAuth, privateRoutes);
 

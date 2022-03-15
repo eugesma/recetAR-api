@@ -60,6 +60,9 @@ export const userSchema = new Schema({
   refreshToken: {
     type: String,
   },
+  authenticationToken: {
+    type: String,
+  },
   createdAt: {
     type: Date,
     default: Date.now
