@@ -60,6 +60,9 @@ export const userSchema = new Schema({
   refreshToken: {
     type: String,
   },
+  authenticationToken: {
+    type: String,
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -68,7 +71,7 @@ export const userSchema = new Schema({
 });
 
 // Model
-const User: Model<IUser> = model<IUser>('User', userSchema);
+const User: Model<IUser> = model<IUser>('User', userSchema, 'User');
 
 // Model methods
 User.schema.method('isValidPassword', async function(thisUser: IUser, password: string): Promise<boolean>{
