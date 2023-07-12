@@ -51,7 +51,7 @@ export function sendMail(options: MailOptions) {
 export function renderHTML(templateName: string, extras: any): Promise<string> {
     return new Promise((resolve, reject) => {
         // [TODO] Analizar el path relativo o absoluto
-        const TEMPLATE_PATH = './templates/';
+        const TEMPLATE_PATH = './src/templates/';
         const url = path.join(process.cwd(), TEMPLATE_PATH, templateName);
 
         fs.readFile(url, { encoding: 'utf-8' }, (err, html) => {
@@ -60,7 +60,7 @@ export function renderHTML(templateName: string, extras: any): Promise<string> {
             }
             try {
                 const template = Handlebars.compile(html);
-                const htmlToSend = template({nombre: extras.usuario.businessName, url: extras.url});
+                const htmlToSend = template({ nombre: extras.usuario.businessName, url: extras.url, username: extras.usuario.username });
                 return resolve(htmlToSend);
             } catch (exp) {
                 return reject(exp);

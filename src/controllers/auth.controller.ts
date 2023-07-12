@@ -21,6 +21,7 @@ class AuthController {
       role.users.push(newUser);
       await newUser.save();
       await role.save();
+      this.sendEmailNewUser(newUser);
       return res.status(200).json({
         newUser
       });
@@ -208,14 +209,14 @@ class AuthController {
     try {
       const user: IUser | null = await User.findOne({ username: username }).populate({ path: 'roles', select: 'role' });
       if (!user) {
-        return res.status(422).json({message: "Usuario no encontrado."});
+        return res.status(422).json({ message: "Usuario no encontrado." });
       }
       // in next version, should embed roles information
       const roles: string | string[] = [];
       await Promise.all(user.roles.map(async (role) => {
         roles.push(role.role);
       }));
-    
+
       const token = JWT.sign({
         iss: "recetar.andes",
         sub: user._id,
@@ -226,7 +227,7 @@ class AuthController {
       }, (process.env.JWT_SECRET || env.JWT_SECRET), {
         algorithm: 'HS256'
       });
-      return res.status(200).json({jwt: token});
+      return res.status(200).json({ jwt: token });
     } catch (err) {
       console.log(err);
       return res.status(500).json('Server Error');
@@ -282,6 +283,23 @@ class AuthController {
     } catch (error) {
       throw error;
     }
+  }
+
+  public sendEmailNewUser = async (newUser: any) => {
+    const extras: any = {
+      titulo: 'Nuevo usuario',
+      usuario: newUser,
+    };
+    const htmlToSend = await renderHTML('emails/new-user.html', extras);
+    const options: MailOptions = {
+      from: `${process.env.EMAIL_HOST}`,
+      to: newUser.email.toString(),
+      subject: 'Nuevo Usuario RecetAR',
+      text: '',
+      html: htmlToSend,
+      attachments: null
+    };
+    await sendMail(options);
   }
 
 }

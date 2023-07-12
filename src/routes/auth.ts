@@ -10,7 +10,7 @@ class AuthRoutes {
 
     this.router.post('/login', passportMiddlewareLocal, authController.login);
     this.router.get('/jwt-login', checkAuth, authController.login);
-    // this.router.post('/register', authController.register);
+    this.router.post('/register', authController.register);
     this.router.post('/logout', authController.logout);
     this.router.post('/refresh', authController.refresh);
     this.router.post('/recovery-password', authController.recoverPassword);
@@ -19,10 +19,10 @@ class AuthRoutes {
         const username = req.body.usuario;
         if (username) {
           const user = await authController.setValidationTokenAndNotify(username);
-          if(user) {
-            return res.json( { status: 'ok', msg: 'Se ha enviado un correo a su casilla!'});
+          if (user) {
+            return res.json({ status: 'ok', msg: 'Se ha enviado un correo a su casilla!' });
           } else {
-            return res.json( { status: 'notfound', msg: 'Usuario no encontrado! Por favor revise sus datos'});
+            return res.json({ status: 'notfound', msg: 'Usuario no encontrado! Por favor revise sus datos' });
           }
         }
         return next(403);
