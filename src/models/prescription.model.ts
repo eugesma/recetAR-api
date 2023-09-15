@@ -10,7 +10,7 @@ const prescriptionSchema = new Schema({
     userId: Schema.Types.ObjectId,
     businessName: { type: String, required: true },
     cuil: { type: String },
-    enrollment: { type: String},
+    enrollment: { type: String },
   },
   dispensedBy: {
     userId: Schema.Types.ObjectId,
@@ -43,6 +43,9 @@ const prescriptionSchema = new Schema({
   },
   observation: {
     type: String,
+  },
+  triple: {
+    type: Boolean,
   }
 });
 

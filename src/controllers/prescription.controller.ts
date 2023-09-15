@@ -14,7 +14,6 @@ import IRole from '../interfaces/role.interface';
 import { Types } from 'mongoose';
 const csv = require('fast-csv');
 
-
 class PrescriptionController implements BaseController {
 
   public index = async (req: Request, res: Response): Promise<Response> => {
@@ -23,7 +22,7 @@ class PrescriptionController implements BaseController {
   }
 
   public create = async (req: Request, res: Response): Promise<Response> => {
-    const { professional, patient, date, supplies, observation, diagnostic } = req.body;
+    const { professional, patient, date, supplies, observation, diagnostic, triple } = req.body;
     const myPatient: IPatient = await Patient.schema.methods.findOrCreate(patient);
     const myProfessional: IUser | null = await User.findOne({ _id: professional });
     const newPrescription: IPrescription = new Prescription({
@@ -55,13 +54,43 @@ class PrescriptionController implements BaseController {
       if (errors.length && !isValid) {
         return res.status(422).json(errors);
       }
-
-      await newPrescription.save();
-      return res.status(200).json(newPrescription);
+      const pres: IPrescription[] = await this.createPrescription(newPrescription, triple);
+      return res.status(200).json(pres);
     } catch (err) {
       console.log(err);
       return res.status(500).json('Server Error');
     }
+  }
+
+  private createPrescription = async (newPrescription: IPrescription, triple: boolean): Promise<IPrescription[]> => {
+    let prescriptions: IPrescription[] = [];
+    newPrescription.save();
+    prescriptions.push(newPrescription);
+    if (triple) {
+      const newPrescription2: IPrescription = new Prescription({
+        patient: newPrescription.patient,
+        professional: newPrescription.professional,
+        date: moment(newPrescription.date).add(31, 'days'),
+        observation: newPrescription.observation,
+        diagnostic: newPrescription.diagnostic,
+        supplies: newPrescription.supplies,
+        triple: true
+      });
+      newPrescription2.save();
+      prescriptions.push(newPrescription2);
+      const newPrescription3: IPrescription = new Prescription({
+        patient: newPrescription.patient,
+        professional: newPrescription.professional,
+        date: moment(newPrescription2.date).add(31, 'days'),
+        observation: newPrescription.observation,
+        diagnostic: newPrescription.diagnostic,
+        supplies: newPrescription.supplies,
+        triple: true
+      });
+      newPrescription3.save();
+      prescriptions.push(newPrescription3);
+    }
+    return prescriptions;
   }
 
   public show = async (req: Request, res: Response): Promise<Response> => {
@@ -82,9 +111,8 @@ class PrescriptionController implements BaseController {
 
       // define a default date for retrieve all the documents if the date its not provided
       const defaultStart = '1900-01-01';
-      const defaultEnd = '3000-12-31';
       let startDate: Date = moment(defaultStart, 'YYYY-MM-DD').startOf('day').toDate();
-      let endDate: Date = moment(defaultEnd, 'YYYY-MM-DD').endOf('day').toDate();
+      let endDate: Date = moment(new Date()).endOf('day').toDate();
 
       if (typeof (filterDate) !== 'undefined') {
         startDate = moment(filterDate, 'YYYY-MM-DD').startOf('day').toDate();

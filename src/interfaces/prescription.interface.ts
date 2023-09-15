@@ -29,4 +29,5 @@ export default interface IPrescription extends Document {
   observation?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  triple?: boolean;
 }
